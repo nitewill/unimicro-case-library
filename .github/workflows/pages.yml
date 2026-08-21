@@ -1,0 +1,93 @@
+name: Deploy application case library to GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/pages.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Synchronize the validated test site
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.parse import quote
+          from urllib.request import Request, urlopen
+          import re
+          import shutil
+
+          origin = "https://unimicro-case-library.yunislin.chatgpt.site"
+          pages_base = "/unimicro-case-library"
+          output = Path("_site")
+          shutil.rmtree(output, ignore_errors=True)
+          output.mkdir(parents=True)
+
+          def download(reference):
+              relative = reference.lstrip("/")
+              target = output / (relative or "index.html")
+              target.parent.mkdir(parents=True, exist_ok=True)
+              url = origin + (reference if reference.startswith("/") else "/" + reference)
+              request = Request(quote(url, safe=":/%?&=+-._"), headers={"User-Agent": "GitHub-Pages-Sync"})
+              with urlopen(request, timeout=90) as response:
+                  target.write_bytes(response.read())
+
+          download("/")
+          downloaded = {"/"}
+          pattern = re.compile(r"/(?:assets|fonts)/[^\"'()\s<>]+")
+
+          for _ in range(4):
+              references = set()
+              for source in output.rglob("*"):
+                  if source.suffix not in {".html", ".css", ".js"}:
+                      continue
+                  text = source.read_text("utf-8", errors="ignore")
+                  references.update(pattern.findall(text))
+              pending = sorted(reference for reference in references if reference not in downloaded)
+              if not pending:
+                  break
+              for reference in pending:
+                  download(reference)
+                  downloaded.add(reference)
+
+          for source in output.rglob("*"):
+              if source.suffix not in {".html", ".css", ".js"}:
+                  continue
+              text = source.read_text("utf-8", errors="ignore")
+              text = text.replace("/assets/", f"{pages_base}/assets/")
+              text = text.replace("/fonts/", f"{pages_base}/fonts/")
+              source.write_text(text, "utf-8")
+
+          shutil.copyfile(output / "index.html", output / "404.html")
+          (output / ".nojekyll").touch()
+          PY
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
