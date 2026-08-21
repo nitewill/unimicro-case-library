@@ -78,9 +78,8 @@ img { display: block; max-width: 100%; }
 .desktop-filter-group h2 { margin: 0 0 18px; display: flex; align-items: center; justify-content: space-between; font-size: 16px; color: var(--navy); }
 .desktop-filter-group h2 svg { transform: rotate(180deg); }
 .filter-options { display: grid; gap: 13px; }
-.filter-option { min-height: 24px; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: start; gap: 9px; font-size: 13px; line-height: 1.45; color: #304660; cursor: pointer; }
+.filter-option { min-height: 24px; display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: start; gap: 9px; font-size: 13px; line-height: 1.45; color: #304660; cursor: pointer; }
 input[type="checkbox"] { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--blue); cursor: pointer; }
-.filter-count { min-width: 26px; padding: 2px 7px; border-radius: 999px; text-align: center; font-size: 11px; color: #52677e; background: #f2f5f8; }
 .results-area { min-width: 0; padding: 0 26px 38px; background: #fbfcfe; }
 .mobile-filters { display: none; }
 .results-toolbar { min-height: 86px; display: flex; align-items: center; gap: 20px; justify-content: space-between; }

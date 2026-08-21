@@ -35,10 +35,8 @@ function PublicHeader({ query, onQueryChange, onSubmitSearch, onRequest }) {
   </header>;
 }
 
-function countBy(cases, key, value) { return cases.filter((item) => item[key] === value).length; }
-
-function FilterGroup({ title, filterKey, options, filters, cases, onToggle, collapsible = false }) {
-  const body = <div className="filter-options">{options.map((option) => <label className="filter-option" key={option}><input type="checkbox" checked={filters[filterKey].includes(option)} onChange={() => onToggle(filterKey, option)} /><span className="filter-label">{option}</span><span className="filter-count">{countBy(cases, filterKey, option)}</span></label>)}</div>;
+function FilterGroup({ title, filterKey, options, filters, onToggle, collapsible = false }) {
+  const body = <div className="filter-options">{options.map((option) => <label className="filter-option" key={option}><input type="checkbox" checked={filters[filterKey].includes(option)} onChange={() => onToggle(filterKey, option)} /><span className="filter-label">{option}</span></label>)}</div>;
   if (collapsible) {
     const selectedCount = filters[filterKey].length;
     return <details className="mobile-filter-group" open={filterKey === "industry"}><summary><span>{title}{selectedCount ? `（${selectedCount}）` : ""}</span><CaretDown size={17} aria-hidden="true" /></summary>{body}</details>;
@@ -46,13 +44,13 @@ function FilterGroup({ title, filterKey, options, filters, cases, onToggle, coll
   return <section className="desktop-filter-group"><h2>{title}<CaretDown size={17} aria-hidden="true" /></h2>{body}</section>;
 }
 
-function DesktopFilters({ filters, cases, onToggle, taxonomies }) {
-  return <aside className="desktop-filters" aria-label="案例筛选"><FilterGroup title="应用行业" filterKey="industry" options={taxonomies.industry} {...{ filters, cases, onToggle }} /><FilterGroup title="检测器" filterKey="detector" options={taxonomies.detector} {...{ filters, cases, onToggle }} /><FilterGroup title="仪器" filterKey="instrument" options={taxonomies.instrument} {...{ filters, cases, onToggle }} /></aside>;
+function DesktopFilters({ filters, onToggle, taxonomies }) {
+  return <aside className="desktop-filters" aria-label="案例筛选"><FilterGroup title="应用行业" filterKey="industry" options={taxonomies.industry} {...{ filters, onToggle }} /><FilterGroup title="检测器" filterKey="detector" options={taxonomies.detector} {...{ filters, onToggle }} /><FilterGroup title="仪器" filterKey="instrument" options={taxonomies.instrument} {...{ filters, onToggle }} /></aside>;
 }
 
-function MobileFilters({ filters, cases, onToggle, onClear, taxonomies }) {
+function MobileFilters({ filters, onToggle, onClear, taxonomies }) {
   const selectedCount = Object.values(filters).flat().length;
-  return <section className="mobile-filters"><div className="mobile-filter-head"><span><FunnelSimple size={18} />筛选条件（{selectedCount}）</span><button type="button" className="text-button" onClick={onClear}>清除筛选</button></div><FilterGroup collapsible title="应用行业" filterKey="industry" options={taxonomies.industry} {...{ filters, cases, onToggle }} /><FilterGroup collapsible title="检测器" filterKey="detector" options={taxonomies.detector} {...{ filters, cases, onToggle }} /><FilterGroup collapsible title="仪器" filterKey="instrument" options={taxonomies.instrument} {...{ filters, cases, onToggle }} /></section>;
+  return <section className="mobile-filters"><div className="mobile-filter-head"><span><FunnelSimple size={18} />筛选条件（{selectedCount}）</span><button type="button" className="text-button" onClick={onClear}>清除筛选</button></div><FilterGroup collapsible title="应用行业" filterKey="industry" options={taxonomies.industry} {...{ filters, onToggle }} /><FilterGroup collapsible title="检测器" filterKey="detector" options={taxonomies.detector} {...{ filters, onToggle }} /><FilterGroup collapsible title="仪器" filterKey="instrument" options={taxonomies.instrument} {...{ filters, onToggle }} /></section>;
 }
 
 function CaseCard({ item, selected, onSelect, onDetail, onDownload, downloading, showSelection }) {
@@ -129,9 +127,9 @@ function PublicLibrary() {
     <PublicHeader query={query} onQueryChange={setQuery} onSubmitSearch={(event) => event.preventDefault()} onRequest={() => setRequestOpen(true)} />
     <button type="button" className="button request-button mobile-request" onClick={() => setRequestOpen(true)}>提交应用需求</button>
     <div className="library-layout">
-      <DesktopFilters filters={filters} cases={cases} onToggle={toggleFilter} taxonomies={taxonomies} />
+      <DesktopFilters filters={filters} onToggle={toggleFilter} taxonomies={taxonomies} />
       <main className="results-area">
-        <MobileFilters filters={filters} cases={cases} onToggle={toggleFilter} onClear={clearFilters} taxonomies={taxonomies} />
+        <MobileFilters filters={filters} onToggle={toggleFilter} onClear={clearFilters} taxonomies={taxonomies} />
         <div className="results-toolbar">
           <strong>共 {filtered.length} 个结果</strong>
           {batchDownloadEnabled && <div className="selection-tools"><label><input type="checkbox" checked={allFilteredSelected} onChange={toggleAllFiltered} />全选当前结果</label><button type="button" className="text-button" onClick={() => setSelected(new Set())} disabled={!selected.size}>清空选择</button><button type="button" className="button primary batch-button" disabled={!selected.size || batchState.running} onClick={handleBatchDownload}>{batchState.running ? <SpinnerGap size={18} className="spin" /> : <DownloadSimple size={18} />}{batchState.running ? `正在生成 ${batchState.current}/${batchState.total}` : `批量下载 PDF${selected.size ? `（${selected.size}）` : ""}`}</button></div>}
