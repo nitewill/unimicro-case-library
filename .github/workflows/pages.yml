@@ -29,6 +29,7 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          from urllib.error import HTTPError
           from urllib.parse import quote
           from urllib.request import Request, urlopen
           import re
@@ -46,8 +47,15 @@ jobs:
               target.parent.mkdir(parents=True, exist_ok=True)
               url = origin + (reference if reference.startswith("/") else "/" + reference)
               request = Request(quote(url, safe=":/%?&=+-._"), headers={"User-Agent": "GitHub-Pages-Sync"})
-              with urlopen(request, timeout=90) as response:
-                  target.write_bytes(response.read())
+              try:
+                  with urlopen(request, timeout=90) as response:
+                      target.write_bytes(response.read())
+              except HTTPError as error:
+                  if error.code == 404:
+                      print(f"Skipping unavailable generated reference: {reference}")
+                      return False
+                  raise
+              return True
 
           download("/")
           downloaded = {"/"}
