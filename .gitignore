@@ -1,0 +1,6 @@
+node_modules/
+dist/
+tmp/
+.firecrawl/
+public/fonts/NotoSansSC-VF.ttf
+*.log
